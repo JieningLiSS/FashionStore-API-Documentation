@@ -1,0 +1,326 @@
+---
+swagger: "2.0"
+info:
+  description: The Categories API
+  version: 1.0.0
+  title: gcitapi
+host: virtserver.swaggerhub.com
+basePath: /cjc2785/gcitstore/1.0.0
+tags:
+- name: developers
+  description: Operations available to regular developers
+schemes:
+- https
+paths:
+  /login:
+    post:
+      tags:
+      - login
+      summary: logs in a customer
+      description: Adds an item to the system
+      operationId: login
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: Order
+        description: Order and order details to add
+        required: false
+        schema:
+          $ref: '#/definitions/Order_1'
+      responses:
+        200:
+          description: user successfully logged in
+        400:
+          description: invalid input
+        401:
+          description: bad credentials
+  /reports/{start}/{end}:
+    get:
+      summary: returns a report for the specified period
+      operationId: getReport
+      produces:
+      - application/json
+      parameters:
+      - name: start
+        in: path
+        required: true
+        type: string
+        format: date
+      - name: end
+        in: path
+        required: true
+        type: string
+        format: date
+      responses:
+        200:
+          description: return the report
+          schema:
+            $ref: '#/definitions/Report'
+        400:
+          description: bad input
+        404:
+          description: report not found
+  /categories/{categoryName}:
+    get:
+      summary: returns the specified category
+      description: |
+        returns category info and products
+      operationId: getCategory
+      produces:
+      - application/json
+      parameters:
+      - name: categoryName
+        in: path
+        description: The category name
+        required: true
+        type: string
+      responses:
+        200:
+          description: return the category
+          schema:
+            $ref: '#/definitions/Category'
+        400:
+          description: bad input parameter
+        404:
+          description: category not found
+  /coupons/{couponCode}:
+    get:
+      tags:
+      - coupon
+      summary: searches coupon table
+      description: |
+        By passing the couponCode to the path, we are searching for a coupon matching that code.
+      operationId: searchCoupon
+      produces:
+      - application/json
+      parameters:
+      - name: couponCode
+        in: path
+        description: pass coupon code and return details of coupon matched with that coupon
+        required: true
+        type: string
+      responses:
+        200:
+          description: search results matching coupon code
+          schema:
+            $ref: '#/definitions/CouponDetails'
+        404:
+          description: coupon not found
+  /orders/{orderId}:
+    get:
+      tags:
+      - order
+      summary: Customer can see order details of a particular order they made before
+      description: |
+        Current customer can view the orders they made in the past.
+      operationId: orderDetails
+      produces:
+      - application/json
+      parameters:
+      - name: orderId
+        in: path
+        description: order id of a particular order
+        required: true
+        type: number
+      responses:
+        200:
+          description: resultant order details returned
+          schema:
+            $ref: '#/definitions/Order'
+        404:
+          description: No order details retrieved
+  /orders:
+    post:
+      tags:
+      - orderPlaced
+      summary: adds an order and orderDetails under it
+      description: Adds an item to the system
+      operationId: addOrder
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: Order
+        description: Order and order details to add
+        required: false
+        schema:
+          $ref: '#/definitions/Order'
+      responses:
+        201:
+          description: order placed correctly
+          schema:
+            type: integer
+            description: The user ID.
+        400:
+          description: invalid input
+  /payments:
+    post:
+      tags:
+      - payment
+      summary: processes payment
+      operationId: processPayment
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: paymentBody
+        description: Request Body of payment api
+        required: false
+        schema:
+          $ref: '#/definitions/ProcessPayment'
+      responses:
+        201:
+          description: payment successfull
+        400:
+          description: invalid input
+        404:
+          description: description not found
+definitions:
+  Report:
+    type: object
+    required:
+    - revenue
+    - taxesDue
+    properties:
+      revenue:
+        type: number
+      taxesDue:
+        type: number
+  Category:
+    type: object
+    required:
+    - description
+    - name
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+        example: Shoes
+      description:
+        type: string
+      products:
+        type: array
+        items:
+          $ref: '#/definitions/Product'
+  Product:
+    required:
+    - brand
+    - name
+    - price
+    - productId
+    - quantity
+    properties:
+      productId:
+        type: integer
+      brand:
+        type: string
+        format: string
+        example: Nike
+      name:
+        type: string
+        example: Air Jordan
+      price:
+        type: number
+      quantity:
+        type: integer
+  CouponDetails:
+    type: object
+    required:
+    - couponCode
+    - couponId
+    - discount
+    - expireDate
+    - productId
+    properties:
+      couponId:
+        type: integer
+      couponCode:
+        type: string
+      expireDate:
+        type: string
+        format: date
+      discount:
+        type: number
+      productId:
+        type: integer
+  Order:
+    type: object
+    required:
+    - creditCardId
+    - date
+    - employeeId
+    - orderDetails
+    - shippingAddress
+    - userId
+    properties:
+      date:
+        type: string
+        format: date
+      userId:
+        type: integer
+      shippingAddress:
+        type: string
+        format: address
+      employeeId:
+        type: integer
+      creditCardId:
+        type: number
+        format: string
+      orderDetails:
+        type: array
+        items:
+          $ref: '#/definitions/OrderDetails'
+  OrderDetails:
+    type: object
+    required:
+    - productId
+    - quantity
+    - taxes
+    - unitPrice
+    properties:
+      productId:
+        type: integer
+      unitPrice:
+        type: number
+      quantity:
+        type: integer
+      taxes:
+        type: number
+  ProcessPayment:
+    type: object
+    required:
+    - cardNumber
+    - creditCardId
+    - expirationDate
+    - holderName
+    properties:
+      creditCardId:
+        type: integer
+      cardNumber:
+        type: integer
+      holderName:
+        type: string
+      expirationDate:
+        type: string
+        format: date
+  Order_1:
+    type: object
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+      role:
+        type: string
+        enum:
+        - customer
+        - employee
